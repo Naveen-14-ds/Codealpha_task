@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Admin — Products</h1>
+      <p class="page-sub">Add, edit, or delete catalog items (admin account required).</p>
+      <div id="msg"></div>
+      <div id="root" class="loading">Loading…</div>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      function getUser() {
+        try {
+          return JSON.parse(localStorage.getItem("user") || "null");
+        } catch {
+          return null;
+        }
+      }
+
+      function showMsg(text, isError) {
+        var m = document.getElementById("msg");
+        if (!text) {
+          m.innerHTML = "";
+          return;
+        }
+        m.innerHTML =
+          '<div class="alert ' +
+          (isError ? "alert-error" : "alert-success") +
+          '">' +
+          escapeHtml(text) +
+          "</div>";
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      function buildLayout() {
+        var root = document.getElementById("root");
+        root.className = "stack";
+        root.innerHTML =
+          '<form class="form" id="prod-form" style="max-width:520px">' +
+          "<h2 style=\"margin-top:0;font-size:1.1rem\" id=\"form-title\">Add product</h2>" +
+          '<input type="hidden" id="edit-id" value="" />' +
+          "<label>Name</label>" +
+          '<input type="text" id="name" required />' +
+          "<label>Description</label>" +
+          '<textarea id="description"></textarea>' +
+          "<label>Price</label>" +
+          '<input type="number" step="0.01" id="price" required />' +
+          "<label>Image URL</label>" +
+          '<input type="url" id="image_url" />' +
+          "<label>Stock</label>" +
+          '<input type="number" id="stock" min="0" value="0" />' +
+          '<button type="submit" class="btn" id="submit-btn">Add product</button> ' +
+          '<button type="button" class="btn btn-ghost" id="cancel-edit" style="display:none">Cancel</button>' +
+          "</form>" +
+          '<div id="table-wrap"></div>';
+
+        document.getElementById("prod-form").addEventListener("submit", onSubmit);
+        document.getElementById("cancel-edit").addEventListener("click", function () {
+          clearForm();
+          showMsg("", false);
+        });
+      }
+
+      function clearForm() {
+        document.getElementById("form-title").textContent = "Add product";
+        document.getElementById("submit-btn").textContent = "Add product";
+        document.getElementById("edit-id").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("description").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("image_url").value = "";
+        document.getElementById("stock").value = "0";
+        document.getElementById("cancel-edit").style.display = "none";
+      }
+
+      async function onSubmit(ev) {
+        ev.preventDefault();
+        showMsg("", false);
+        var body = {
+          name: document.getElementById("name").value,
+          description: document.getElementById("description").value,
+          price: parseFloat(document.getElementById("price").value),
+          image_url: document.getElementById("image_url").value,
+          stock: parseInt(document.getElementById("stock").value, 10) || 0,
+        };
+        var id = document.getElementById("edit-id").value;
+        try {
+          if (id) {
+            await api("/products/" + id, { method: "PUT", body: JSON.stringify(body) });
+            showMsg("Product updated.", false);
+          } else {
+            await api("/products", { method: "POST", body: JSON.stringify(body) });
+            showMsg("Product added.", false);
+          }
+          clearForm();
+          var data = await api("/products");
+          renderTable(data.products || []);
+        } catch (err) {
+          showMsg(err.message, true);
+        }
+      }
+
+      function renderTable(products) {
+        var wrap = document.getElementById("table-wrap");
+        if (!wrap) return;
+        if (!products.length) {
+          wrap.innerHTML = '<p class="empty">No products yet.</p>';
+          return;
+        }
+        var rows = products
+          .map(function (p) {
+            return (
+              "<tr>" +
+              "<td>" +
+              p.id +
+              "</td>" +
+              "<td>" +
+              escapeHtml(p.name) +
+              "</td>" +
+              "<td>$" +
+              Number(p.price).toFixed(2) +
+              "</td>" +
+              "<td>" +
+              p.stock +
+              "</td>" +
+              '<td class="admin-actions">' +
+              '<button type="button" class="btn btn-ghost btn-sm edit-btn" data-id="' +
+              p.id +
+              '">Edit</button> ' +
+              '<button type="button" class="btn btn-danger btn-sm del-btn" data-id="' +
+              p.id +
+              '">Delete</button>' +
+              "</td>" +
+              "</tr>"
+            );
+          })
+          .join("");
+        wrap.innerHTML =
+          '<table class="admin-table" style="margin-top:1.5rem"><thead><tr><th>ID</th><th>Name</th><th>Price</th><th>Stock</th><th></th></tr></thead><tbody>' +
+          rows +
+          "</tbody></table>";
+
+        wrap.querySelectorAll(".edit-btn").forEach(function (btn) {
+          btn.addEventListener("click", async function () {
+            var id = btn.getAttribute("data-id");
+            try {
+              var d = await api("/products/" + id);
+              var p = d.product;
+              document.getElementById("form-title").textContent = "Edit product";
+              document.getElementById("submit-btn").textContent = "Save changes";
+              document.getElementById("edit-id").value = String(p.id);
+              document.getElementById("name").value = p.name;
+              document.getElementById("description").value = p.description || "";
+              document.getElementById("price").value = p.price;
+              document.getElementById("image_url").value = p.image_url || "";
+              document.getElementById("stock").value = p.stock;
+              document.getElementById("cancel-edit").style.display = "inline-flex";
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } catch (e) {
+              showMsg(e.message, true);
+            }
+          });
+        });
+        wrap.querySelectorAll(".del-btn").forEach(function (btn) {
+          btn.addEventListener("click", async function () {
+            if (!confirm("Delete this product?")) return;
+            var id = btn.getAttribute("data-id");
+            try {
+              await api("/products/" + id, { method: "DELETE" });
+              showMsg("Deleted.", false);
+              var data = await api("/products");
+              renderTable(data.products || []);
+            } catch (e) {
+              showMsg(e.message, true);
+            }
+          });
+        });
+      }
+
+      async function load() {
+        var root = document.getElementById("root");
+        if (!localStorage.getItem("token")) {
+          root.className = "empty";
+          root.innerHTML = 'Please <a href="login.html">log in</a> as admin.';
+          return;
+        }
+        var user = getUser();
+        if (!user || !user.is_admin) {
+          root.className = "alert alert-error";
+          root.textContent = "This page is only for admin users.";
+          return;
+        }
+        try {
+          var data = await api("/products");
+          buildLayout();
+          renderTable(data.products || []);
+        } catch (e) {
+          root.className = "alert alert-error";
+          root.textContent = e.message;
+        }
+      }
+
+      load();
+    </script>
+  </body>
+</html>

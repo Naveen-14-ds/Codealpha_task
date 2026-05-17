@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <p><a href="index.html">← Back to products</a></p>
+      <div id="root" class="loading">Loading…</div>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      (async function () {
+        var root = document.getElementById("root");
+        var params = new URLSearchParams(window.location.search);
+        var id = params.get("id");
+        if (!id) {
+          root.className = "alert alert-error";
+          root.textContent = "Missing product id.";
+          return;
+        }
+        try {
+          var data = await api("/products/" + id);
+          var p = data.product;
+          root.className = "product-detail";
+          root.innerHTML =
+            '<div>' +
+            (p.image_url
+              ? '<img src="' +
+                String(p.image_url).replace(/"/g, "&quot;") +
+                '" alt="" />'
+              : "") +
+            "</div>" +
+            "<div>" +
+            "<h1 class=\"page-title\">" +
+            escapeHtml(p.name) +
+            "</h1>" +
+            "<p class=\"detail-price\">$" +
+            Number(p.price).toFixed(2) +
+            "</p>" +
+            "<p>" +
+            escapeHtml(p.description) +
+            "</p>" +
+            "<p class=\"page-sub\">Stock: " +
+            p.stock +
+            "</p>" +
+            '<label for="qty">Quantity</label><br/>' +
+            '<input type="number" id="qty" min="1" max="' +
+            p.stock +
+            '" value="1" style="width:5rem;margin-bottom:1rem;padding:0.4rem;border-radius:8px;border:1px solid var(--border)" />' +
+            "<br/>" +
+            '<button type="button" class="btn" id="add-btn">Add to cart</button>' +
+            '<p id="msg" class="page-sub"></p>' +
+            "</div>";
+
+          document.getElementById("add-btn").onclick = async function () {
+            var msg = document.getElementById("msg");
+            msg.textContent = "";
+            if (!localStorage.getItem("token")) {
+              msg.textContent = "Please log in to add items to your cart.";
+              return;
+            }
+            var qty = parseInt(document.getElementById("qty").value, 10) || 1;
+            try {
+              await api("/cart", {
+                method: "POST",
+                body: JSON.stringify({ product_id: p.id, quantity: qty }),
+              });
+              msg.textContent = "Added to cart.";
+              msg.className = "alert alert-success";
+            } catch (e) {
+              msg.textContent = e.message;
+              msg.className = "alert alert-error";
+            }
+          };
+        } catch (e) {
+          root.className = "alert alert-error";
+          root.textContent = e.message || "Product not found.";
+        }
+      })();
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+    </script>
+  </body>
+</html>
