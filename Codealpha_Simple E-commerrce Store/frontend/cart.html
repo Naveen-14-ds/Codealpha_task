@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cart — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Shopping cart</h1>
+      <div id="msg"></div>
+      <div id="root" class="loading">Loading…</div>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      async function loadCart() {
+        var root = document.getElementById("root");
+        if (!localStorage.getItem("token")) {
+          root.className = "empty";
+          root.innerHTML = 'Please <a href="login.html">log in</a> to view your cart.';
+          return;
+        }
+        try {
+          var data = await api("/cart");
+          render(data.items || []);
+        } catch (e) {
+          root.className = "alert alert-error";
+          root.textContent = e.message;
+        }
+      }
+
+      function render(items) {
+        var root = document.getElementById("root");
+        if (!items.length) {
+          root.className = "empty";
+          root.textContent = "Your cart is empty.";
+          return;
+        }
+        var total = 0;
+        var rows = items
+          .map(function (line) {
+            var sub = line.quantity * line.price;
+            total += sub;
+            return (
+              "<tr>" +
+              '<td data-label="Product">' +
+              escapeHtml(line.name) +
+              "</td>" +
+              '<td data-label="Price">$' +
+              Number(line.price).toFixed(2) +
+              "</td>" +
+              '<td data-label="Qty"><input type="number" min="1" max="' +
+              line.stock +
+              '" value="' +
+              line.quantity +
+              '" data-cart="' +
+              line.cart_id +
+              '" class="qty-input" /></td>' +
+              '<td data-label="Subtotal">$' +
+              sub.toFixed(2) +
+              "</td>" +
+              '<td data-label=""><button type="button" class="btn btn-ghost btn-sm remove-btn" data-cart="' +
+              line.cart_id +
+              '">Remove</button></td>' +
+              "</tr>"
+            );
+          })
+          .join("");
+        root.className = "stack";
+        root.innerHTML =
+          '<table class="cart-table"><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead><tbody>' +
+          rows +
+          "</tbody></table>" +
+          '<p><strong>Total: $' +
+          total.toFixed(2) +
+          '</strong></p><p><button type="button" class="btn" id="checkout">Place order</button></p>';
+
+        root.querySelectorAll(".qty-input").forEach(function (input) {
+          input.addEventListener("change", async function () {
+            var id = input.getAttribute("data-cart");
+            var q = parseInt(input.value, 10);
+            if (!q || q < 1) return;
+            try {
+              await api("/cart/" + id, {
+                method: "PUT",
+                body: JSON.stringify({ quantity: q }),
+              });
+              await loadCart();
+            } catch (e) {
+              showMsg(e.message, true);
+              await loadCart();
+            }
+          });
+        });
+        root.querySelectorAll(".remove-btn").forEach(function (btn) {
+          btn.addEventListener("click", async function () {
+            var id = btn.getAttribute("data-cart");
+            await api("/cart/" + id, { method: "DELETE" });
+            await loadCart();
+          });
+        });
+        document.getElementById("checkout").onclick = async function () {
+          try {
+            await api("/orders", { method: "POST", body: "{}" });
+            showMsg("Order placed. Thank you!", false);
+            await loadCart();
+          } catch (e) {
+            showMsg(e.message, true);
+          }
+        };
+      }
+
+      function showMsg(text, isError) {
+        var m = document.getElementById("msg");
+        m.className = isError ? "alert alert-error" : "alert alert-success";
+        m.textContent = text;
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+
+      loadCart();
+    </script>
+  </body>
+</html>

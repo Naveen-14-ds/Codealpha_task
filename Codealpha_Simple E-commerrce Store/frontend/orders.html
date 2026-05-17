@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Orders — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Your orders</h1>
+      <div id="root" class="loading">Loading…</div>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      (async function () {
+        var root = document.getElementById("root");
+        if (!localStorage.getItem("token")) {
+          root.className = "empty";
+          root.innerHTML = 'Please <a href="login.html">log in</a> to see orders.';
+          return;
+        }
+        try {
+          var data = await api("/orders");
+          var orders = data.orders || [];
+          if (!orders.length) {
+            root.className = "empty";
+            root.textContent = "You have not placed any orders yet.";
+            return;
+          }
+          root.className = "stack";
+          root.innerHTML = orders.map(renderOrder).join("");
+        } catch (e) {
+          root.className = "alert alert-error";
+          root.textContent = e.message;
+        }
+      })();
+
+      function renderOrder(o) {
+        var lines = (o.items || [])
+          .map(function (i) {
+            return (
+              "<li>" +
+              escapeHtml(i.name) +
+              " × " +
+              i.quantity +
+              " @ $" +
+              Number(i.price).toFixed(2) +
+              "</li>"
+            );
+          })
+          .join("");
+        return (
+          '<article class="order-card"><h3>Order #' +
+          o.id +
+          "</h3>" +
+          '<div class="order-meta">' +
+          escapeHtml(o.created_at) +
+          " · " +
+          escapeHtml(o.status) +
+          " · Total $" +
+          Number(o.total).toFixed(2) +
+          "</div>" +
+          "<ul style=\"margin:0;padding-left:1.2rem\">" +
+          lines +
+          "</ul></article>"
+        );
+      }
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+    </script>
+  </body>
+</html>

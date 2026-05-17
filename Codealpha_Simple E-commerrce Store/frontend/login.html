@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log in — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Log in</h1>
+      <p class="page-sub">Use the admin account from the README to manage products.</p>
+      <form class="form" id="form">
+        <div id="alert"></div>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="username" />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required autocomplete="current-password" />
+        <button type="submit" class="btn">Log in</button>
+        <p class="page-sub" style="margin-top: 1rem; margin-bottom: 0">
+          No account? <a href="register.html">Create one</a>
+        </p>
+      </form>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      document.getElementById("form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var box = document.getElementById("alert");
+        box.innerHTML = "";
+        try {
+          var body = {
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+          };
+          var data = await api("/auth/login", { method: "POST", body: JSON.stringify(body) });
+          saveSession(data.token, data.user);
+          window.location.href = "index.html";
+        } catch (err) {
+          box.innerHTML = '<div class="alert alert-error">' + escapeHtml(err.message) + "</div>";
+        }
+      });
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+    </script>
+  </body>
+</html>

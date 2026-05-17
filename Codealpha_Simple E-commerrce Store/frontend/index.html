@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Products — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Products</h1>
+      <p class="page-sub">Browse the catalog and open an item for details.</p>
+      <div id="product-grid" class="card-grid loading">Loading products…</div>
+    </main>
+    <p class="footer-note">Demo store — run the backend to load data.</p>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      (async function () {
+        const grid = document.getElementById("product-grid");
+        try {
+          const data = await api("/products");
+          if (!data.products.length) {
+            grid.className = "empty";
+            grid.textContent = "No products yet. Log in as admin to add some.";
+            return;
+          }
+          grid.className = "card-grid";
+          grid.innerHTML = data.products
+            .map(function (p) {
+              const img = p.image_url
+                ? '<img class="thumb" src="' + escapeAttr(p.image_url) + '" alt="" />'
+                : '<div class="thumb"></div>';
+              return (
+                '<article class="product-card">' +
+                img +
+                '<div class="body"><h2>' +
+                escapeHtml(p.name) +
+                "</h2>" +
+                "<p class=\"page-sub\" style=\"margin:0;font-size:0.9rem\">" +
+                escapeHtml(truncate(p.description, 80)) +
+                '</p><p class="price">$' +
+                Number(p.price).toFixed(2) +
+                '</p><a class="btn btn-sm" href="product.html?id=' +
+                p.id +
+                '">View</a></div></article>'
+              );
+            })
+            .join("");
+        } catch (e) {
+          grid.className = "alert alert-error";
+          grid.textContent =
+            e.message ||
+            "Could not load products. Start the server from the backend folder (npm start).";
+        }
+      })();
+
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+      function escapeAttr(s) {
+        return String(s).replace(/"/g, "&quot;");
+      }
+      function truncate(s, n) {
+        s = String(s || "");
+        return s.length <= n ? s : s.slice(0, n) + "…";
+      }
+    </script>
+  </body>
+</html>
