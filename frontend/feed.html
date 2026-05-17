@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Mini — Feed</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="logo" href="/feed.html">Social Mini</a>
+        <nav class="flex">
+          <a class="btn btn-ghost btn-sm" href="#" id="link-profile">My profile</a>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-logout">Log out</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Home</h1>
+      <p class="muted">Posts from you and people you follow.</p>
+
+      <section class="card" style="margin-top: 1rem">
+        <h2>Find people</h2>
+        <div class="field" style="margin-bottom: 0">
+          <label for="search-q" class="sr-only">Search users</label>
+          <input id="search-q" type="search" placeholder="Search by username or name…" autocomplete="off" />
+        </div>
+        <div id="search-results" class="search-results hidden"></div>
+      </section>
+
+      <section class="card" style="margin-top: 1rem">
+        <h2>New post</h2>
+        <form id="form-new-post">
+          <div class="field" style="margin-bottom: 0.75rem">
+            <label for="post-content" class="sr-only">Post content</label>
+            <textarea id="post-content" maxlength="2000" placeholder="What is on your mind?" required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Publish</button>
+        </form>
+      </section>
+
+      <div id="feed-flash"></div>
+      <div id="feed-list"></div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/feed.js"></script>
+  </body>
+</html>

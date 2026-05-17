@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Mini — Sign in</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="logo" href="/index.html">Social Mini</a>
+        <nav class="flex">
+          <a class="btn btn-ghost btn-sm" href="/feed.html">Feed</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h1>Welcome</h1>
+      <p class="muted">Create an account or sign in to see your feed.</p>
+
+      <div class="card" style="max-width: 420px; margin-top: 1.5rem">
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab active" data-tab="login">Log in</button>
+          <button type="button" class="tab" data-tab="register">Register</button>
+        </div>
+        <div id="flash"></div>
+
+        <form id="form-login" class="panel" autocomplete="on">
+          <div class="field">
+            <label for="login-user">Username or email</label>
+            <input id="login-user" name="username" required />
+          </div>
+          <div class="field">
+            <label for="login-pass">Password</label>
+            <input id="login-pass" type="password" name="password" required />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">Log in</button>
+        </form>
+
+        <form id="form-register" class="panel hidden" autocomplete="on">
+          <div class="field">
+            <label for="reg-user">Username</label>
+            <input id="reg-user" name="username" required minlength="2" maxlength="32" />
+          </div>
+          <div class="field">
+            <label for="reg-email">Email</label>
+            <input id="reg-email" type="email" name="email" required />
+          </div>
+          <div class="field">
+            <label for="reg-name">Display name</label>
+            <input id="reg-name" name="display_name" maxlength="64" placeholder="Optional" />
+          </div>
+          <div class="field">
+            <label for="reg-pass">Password (min 6 characters)</label>
+            <input id="reg-pass" type="password" name="password" required minlength="6" />
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%">Create account</button>
+        </form>
+      </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+  </body>
+</html>
