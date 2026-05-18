@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign up — ShopLite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <nav id="site-nav" class="nav-inner"></nav>
+      </div>
+    </header>
+    <main class="container">
+      <h1 class="page-title">Create account</h1>
+      <p class="page-sub">New accounts are regular shoppers (not admins).</p>
+      <form class="form" id="form">
+        <div id="alert"></div>
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required autocomplete="name" />
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" />
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password" />
+        <button type="submit" class="btn">Sign up</button>
+        <p class="page-sub" style="margin-top: 1rem; margin-bottom: 0">
+          Already have an account? <a href="login.html">Log in</a>
+        </p>
+      </form>
+    </main>
+    <script src="js/api.js"></script>
+    <script src="js/nav.js"></script>
+    <script>
+      document.getElementById("form").addEventListener("submit", async function (e) {
+        e.preventDefault();
+        var box = document.getElementById("alert");
+        box.innerHTML = "";
+        try {
+          var body = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+          };
+          var data = await api("/auth/register", { method: "POST", body: JSON.stringify(body) });
+          saveSession(data.token, data.user);
+          window.location.href = "index.html";
+        } catch (err) {
+          box.innerHTML = '<div class="alert alert-error">' + escapeHtml(err.message) + "</div>";
+        }
+      });
+      function escapeHtml(s) {
+        var d = document.createElement("div");
+        d.textContent = s;
+        return d.innerHTML;
+      }
+    </script>
+  </body>
+</html>
